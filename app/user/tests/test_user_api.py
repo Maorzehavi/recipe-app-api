@@ -1,6 +1,6 @@
-'''
-test for user api
-'''
+"""
+Tests for the user API.
+"""
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -13,22 +13,22 @@ CREATE_USER_URL = reverse('user:create')
 
 
 def create_user(**params):
-    '''create and return a new user'''
+    """Create and return a new user."""
     return get_user_model().objects.create_user(**params)
 
 
 class PublicUserApiTests(TestCase):
-    '''test the users api (public)'''
+    """Test the public features of the user API."""
 
     def setUp(self):
         self.client = APIClient()
 
-    def test_create_valid_user_success(self):
-        '''test creating user with valid payload is successful'''
+    def test_create_user_success(self):
+        """Test creating a user is successful."""
         payload = {
             'email': 'test@example.com',
-            'password': 'password123',
-            'name': 'Test name',
+            'password': 'testpass123',
+            'name': 'Test Name',
         }
         res = self.client.post(CREATE_USER_URL, payload)
 
@@ -38,25 +38,24 @@ class PublicUserApiTests(TestCase):
         self.assertNotIn('password', res.data)
 
     def test_user_with_email_exists_error(self):
-        '''test creating user that already exists fails'''
+        """Test error returned if user with email exists."""
         payload = {
             'email': 'test@example.com',
-            'password': 'password123',
-            'name': 'Test name',
+            'password': 'testpass123',
+            'name': 'Test Name',
         }
-        create_user(**payload)
-        res = self.client.post(CREATE_USER_URL, payload)
+        get_user_model().objects.create(**payload)
+        res = self.client.post(CREATE_USER_URL)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_too_short_error(self):
-        '''test that the password must be more than 5 characters'''
+        """Test an error is returned if password less than 5 chars."""
         payload = {
             'email': 'test@example.com',
-            'password': 'pass',
+            'password': 'pw',
             'name': 'Test name',
         }
-        create_user(**payload)
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
